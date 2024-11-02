@@ -9,7 +9,7 @@ import {
   startWith,
   switchMap,
 } from "rxjs";
-import { searchRecipes } from "./api";
+import { searchRecipes } from "./search.api";
 import { Recipe } from "./types";
 
 export class SearchState {
