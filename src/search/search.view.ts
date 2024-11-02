@@ -1,4 +1,3 @@
-import { fromEvent, map } from "rxjs";
 import { ISearchView } from "./search.component";
 
 export class SearchView implements ISearchView {
@@ -6,12 +5,6 @@ export class SearchView implements ISearchView {
 
   constructor() {
     this.input = this.getInputElement();
-  }
-
-  public getSearchValue() {
-    return fromEvent(this.input, "input").pipe(
-      map((e) => (e.target as HTMLInputElement)!.value)
-    );
   }
 
   private getInputElement() {
