@@ -1,4 +1,3 @@
-import { Observable } from "rxjs";
 import { SearchState } from "../search/search.state";
 
 export class HeaderComponent {
