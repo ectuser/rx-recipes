@@ -8,9 +8,7 @@ export class SearchComponent {
   ) {
     const searchValue$ = this.searchView.getSearchValue();
 
-    searchValue$.subscribe((value) => {
-      this.searchState.setSearch(value);
-    });
+    this.searchState.connectSource(searchValue$);
   }
 }
 

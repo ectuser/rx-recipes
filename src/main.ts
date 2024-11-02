@@ -12,6 +12,6 @@ const resultsView = new ResultsView();
 const headerView = new HeaderView();
 const searchView = new SearchView();
 
-const searchPresenter = new SearchComponent(searchView, searchState);
-const headerPresenter = new HeaderComponent(headerView, searchState);
-const resultsPresenter = new ResultsComponent(resultsView, searchState);
+new SearchComponent(searchView, searchState);
+new HeaderComponent(headerView, searchState);
+new ResultsComponent(resultsView, searchState);
