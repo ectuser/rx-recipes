@@ -15,40 +15,47 @@ export function request<TResult>(url: string) {
     switchMap((response) => {
       if (response.ok) {
         return from(
-          response.json().then(
-            (data) =>
-              ({
-                data,
-                loading: false,
-                error: undefined,
-              } as SuccessResponse<TResult>)
-          )
+          response.json().then((data) => createSuccessResponse<TResult>(data))
         ).pipe(delay(2000));
       } else if (response.status === 500) {
         return throwError(() => new Error("Server Error 500"));
       } else {
-        return of({
-          data: undefined,
-          loading: false,
-          error: `Error ${response.status}`,
-        } as ErrorResponse);
+        return of(createErrorResponse(`Error ${response.status}`));
       }
     }),
     retry(3),
     catchError((err) => {
       console.error(err);
-      return of({
-        data: undefined,
-        loading: false,
-        error: err.message,
-      } as ErrorResponse);
+      return of(createErrorResponse(err.message));
     }),
-    startWith({
-      data: undefined,
-      loading: true,
-      error: undefined,
-    } as LoadingResponse)
+    startWith(createLoadingResponse())
   );
+}
+
+function createSuccessResponse<TResult>(
+  data: TResult
+): SuccessResponse<TResult> {
+  return {
+    data,
+    loading: false,
+    error: undefined,
+  };
+}
+
+function createErrorResponse(error: string): ErrorResponse {
+  return {
+    data: undefined,
+    loading: false,
+    error,
+  };
+}
+
+function createLoadingResponse(): LoadingResponse {
+  return {
+    data: undefined,
+    loading: true,
+    error: undefined,
+  };
 }
 
 export type SuccessResponse<TResult> = {
