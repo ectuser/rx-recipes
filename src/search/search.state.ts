@@ -21,7 +21,9 @@ export class SearchState {
   public readonly searchValue$: Observable<string>;
   private readonly sources$: ReplaySubject<Observable<string>>;
 
-  constructor() {
+  private static instance: SearchState;
+
+  private constructor() {
     this.sources$ = new ReplaySubject<Observable<string>>(Infinity);
     this.searchValue$ = this.sources$.pipe(mergeAll(), startWith(""));
 
@@ -40,6 +42,13 @@ export class SearchState {
     this.error$ = query$.pipe(map((query) => query.error));
 
     this.numberOfItems$ = this.searchItems$.pipe(map((items) => items?.length));
+  }
+
+  public static getInstance(): SearchState {
+    if (!SearchState.instance) {
+      SearchState.instance = new SearchState();
+    }
+    return SearchState.instance;
   }
 
   public connectSource(source$: Observable<string>) {

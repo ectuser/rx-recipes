@@ -1,5 +1,6 @@
+import { SearchState } from "../search/search.state";
 import { Recipe } from "../search/types";
-import { IResultsView } from "./results.component";
+import { IResultsView, ResultsComponent } from "./results.component";
 
 export class ResultsView implements IResultsView {
   private loading: Element | undefined;
@@ -8,6 +9,9 @@ export class ResultsView implements IResultsView {
 
   constructor() {
     this.container = this.getSearchContainerElement();
+
+    const searchState = SearchState.getInstance();
+    new ResultsComponent(this, searchState);
   }
 
   public setLoading(value: boolean) {
