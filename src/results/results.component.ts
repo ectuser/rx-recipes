@@ -14,14 +14,10 @@ export class ResultsComponent {
     this.searchItems$ = this.searchState.searchItems$;
 
     this.loading$.subscribe((loading) => {
-      console.log({ loading });
-
       this.resultsView.setLoading(loading);
     });
 
     this.searchItems$.subscribe((items) => {
-      console.log({ items });
-
       this.resultsView.setRecipes(items);
     });
   }

@@ -1,6 +1,5 @@
 import {
   catchError,
-  delay,
   from,
   of,
   startWith,
@@ -16,7 +15,7 @@ export function request<TResult>(url: string) {
       if (response.ok) {
         return from(
           response.json().then((data) => createSuccessResponse<TResult>(data))
-        ).pipe(delay(randomDelay()));
+        );
       } else if (response.status === 500) {
         return throwError(() => new Error("Server Error 500"));
       } else {
@@ -76,6 +75,6 @@ export type LoadingResponse = {
   error: undefined;
 };
 
-function randomDelay() {
+export function randomDelay() {
   return Math.floor(Math.random() * (3000 - 200 + 1)) + 200;
 }

@@ -1,9 +1,12 @@
 import {
+  combineLatest,
   debounceTime,
   filter,
   map,
+  merge,
   mergeAll,
   Observable,
+  of,
   ReplaySubject,
   shareReplay,
   startWith,
@@ -11,6 +14,7 @@ import {
 } from "rxjs";
 import { searchRecipes } from "./search.api";
 import { Recipe } from "./types";
+import { getPaginationSkip, PAGINATION_LIMIT } from "../pagination/model";
 
 export class SearchState {
   public readonly searchItems$: Observable<Recipe[] | undefined>;
@@ -18,22 +22,27 @@ export class SearchState {
   public readonly error$: Observable<string | undefined>;
   public readonly numberOfItems$: Observable<number | undefined>;
 
-  public readonly searchValue$: Observable<string>;
-  private readonly sources$: ReplaySubject<Observable<string>>;
-
   private static instance: SearchState;
 
-  private constructor() {
-    this.sources$ = new ReplaySubject<Observable<string>>(Infinity);
-    this.searchValue$ = this.sources$.pipe(mergeAll(), startWith(""));
+  public readonly searchValue$: ReplaySubject<string>;
+  private readonly currentPage$: ReplaySubject<number>;
 
-    const value$ = this.searchValue$.pipe(
+  private constructor() {
+    this.searchValue$ = new ReplaySubject<string>(1);
+
+    const value$ = merge(this.searchValue$, of("")).pipe(
       filter((val) => val.length >= 3 || val.length === 0),
       debounceTime(300)
     );
 
-    const query$ = value$.pipe(
-      switchMap((searchValue) => searchRecipes(searchValue)),
+    this.currentPage$ = new ReplaySubject<number>(1);
+
+    const query$ = combineLatest([value$, this.currentPage$]).pipe(
+      debounceTime(0),
+      switchMap(([searchValue, currentPage]) => {
+        const skip = getPaginationSkip(currentPage, PAGINATION_LIMIT);
+        return searchRecipes(searchValue, PAGINATION_LIMIT, skip);
+      }),
       shareReplay({ refCount: true, bufferSize: 1 })
     );
 
@@ -41,7 +50,7 @@ export class SearchState {
     this.loading$ = query$.pipe(map((query) => query.loading));
     this.error$ = query$.pipe(map((query) => query.error));
 
-    this.numberOfItems$ = this.searchItems$.pipe(map((items) => items?.length));
+    this.numberOfItems$ = query$.pipe(map((query) => query.data?.total));
   }
 
   public static getInstance(): SearchState {
@@ -51,7 +60,11 @@ export class SearchState {
     return SearchState.instance;
   }
 
-  public connectSource(source$: Observable<string>) {
-    this.sources$.next(source$);
+  public setSearchValue(value: string) {
+    this.searchValue$.next(value);
+  }
+
+  public setCurrentPage(page: number) {
+    this.currentPage$.next(page);
   }
 }

@@ -1,3 +1,4 @@
+import { PAGINATION_LIMIT } from "../pagination/model";
 import { SearchState } from "../search/search.state";
 import { Recipe } from "../search/types";
 import { IResultsView, ResultsComponent } from "./results.component";
@@ -47,8 +48,20 @@ export class ResultsView implements IResultsView {
   }
 
   private createLoadingElement() {
-    const element = document.createElement("article");
-    element.setAttribute("aria-busy", "true");
+    const cardElements = Array.from({ length: PAGINATION_LIMIT }).map(() => {
+      const el = document.createElement("article");
+
+      el.textContent = "Loading...";
+
+      return el;
+    });
+
+    const element = document.createElement("div");
+
+    cardElements.forEach((el) => {
+      element.appendChild(el);
+    });
+
     return element;
   }
 
