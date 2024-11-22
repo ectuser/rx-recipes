@@ -1,92 +1,46 @@
-import {
-  combineLatest,
-  distinctUntilChanged,
-  filter,
-  map,
-  merge,
-  Observable,
-  of,
-  shareReplay,
-  Subject,
-  switchMap,
-  take,
-} from "rxjs";
+import { PaginationState } from "./pagination.state";
 import { SearchState } from "../search/search.state";
-import { getIsLastPage, PAGINATION_LIMIT } from "./model";
+import { Observable } from "rxjs";
 
 export class PaginationComponent {
-  public readonly currentPage$: Observable<number>;
-  public readonly previousPage$: Subject<void>;
-  public readonly nextPage$: Subject<void>;
+  private readonly previousButtonDisabled$: Observable<boolean>;
+  private readonly nextButtonDisabled$: Observable<boolean>;
 
-  private readonly previousPageDisabled$: Observable<boolean>;
-  private readonly nextPageDisabled$: Observable<boolean>;
+  private readonly page$: Observable<number>;
 
-  constructor(private view: IPaginationView, private searchState: SearchState) {
-    this.previousPage$ = new Subject();
-    this.nextPage$ = new Subject();
-    const initialPage$ = of(0);
-    this.currentPage$ = merge(
-      initialPage$,
-      this.searchState.searchValue$.pipe(map(() => 0)),
-      this.previousPage$.pipe(switchMap(() => this.getCurrentPagePrevious())),
-      this.nextPage$.pipe(switchMap(() => this.getCurrentPageNext()))
-    ).pipe(
-      distinctUntilChanged(),
-      shareReplay({ refCount: true, bufferSize: 1 })
-    );
+  constructor(
+    private view: IPaginationView,
+    private searchState: SearchState,
+    private paginationState: PaginationState
+  ) {
+    this.previousButtonDisabled$ = this.paginationState.isFirstPage$;
+    this.nextButtonDisabled$ = this.paginationState.isLastPage$;
 
-    this.previousPageDisabled$ = this.currentPage$.pipe(
-      map((currentPage) => currentPage === 0)
-    );
-    this.nextPageDisabled$ = combineLatest([
-      this.currentPage$,
-      this.searchState.numberOfItems$.pipe(
-        filter((numberOfItems) => numberOfItems !== undefined)
-      ),
-    ]).pipe(
-      map(([currentPage, total]) =>
-        getIsLastPage(currentPage, total, PAGINATION_LIMIT)
-      )
-    );
+    this.page$ = this.paginationState.currentPage$;
 
-    this.previousPageDisabled$.subscribe((isDisabled) => {
+    this.previousButtonDisabled$.subscribe((isDisabled) => {
       this.view.togglePreviousPageButtonDisable(isDisabled);
     });
 
-    this.nextPageDisabled$.subscribe((isDisabled) => {
+    this.nextButtonDisabled$.subscribe((isDisabled) => {
       this.view.toggleNextPageButtonDisable(isDisabled);
     });
 
-    this.currentPage$.subscribe((value) => {
+    this.page$.subscribe((value) => {
       this.view.updateCurrentPage(value);
     });
 
-    this.currentPage$.subscribe((page) => {
+    this.page$.subscribe((page) => {
       this.searchState.setCurrentPage(page);
     });
   }
 
   public handleNextPage() {
-    this.nextPage$.next();
+    this.paginationState.handleNextPage();
   }
 
   public handlePreviousPage() {
-    this.previousPage$.next();
-  }
-
-  private getCurrentPagePrevious() {
-    return this.currentPage$.pipe(
-      take(1),
-      map((currentPage) => currentPage - 1)
-    );
-  }
-
-  private getCurrentPageNext() {
-    return this.currentPage$.pipe(
-      take(1),
-      map((currentPage) => currentPage + 1)
-    );
+    this.paginationState.handlePreviousPage();
   }
 }
 

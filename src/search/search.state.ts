@@ -4,13 +4,13 @@ import {
   filter,
   map,
   merge,
-  mergeAll,
   Observable,
   of,
-  ReplaySubject,
   shareReplay,
-  startWith,
+  skip,
+  Subject,
   switchMap,
+  take,
 } from "rxjs";
 import { searchRecipes } from "./search.api";
 import { Recipe } from "./types";
@@ -22,29 +22,15 @@ export class SearchState {
   public readonly error$: Observable<string | undefined>;
   public readonly numberOfItems$: Observable<number | undefined>;
 
+  public readonly searchValue$: Subject<string>;
+  private readonly currentPage$: Subject<number>;
+
   private static instance: SearchState;
-
-  public readonly searchValue$: ReplaySubject<string>;
-  private readonly currentPage$: ReplaySubject<number>;
-
   private constructor() {
-    this.searchValue$ = new ReplaySubject<string>(1);
+    this.searchValue$ = new Subject<string>();
+    this.currentPage$ = new Subject<number>();
 
-    const value$ = merge(this.searchValue$, of("")).pipe(
-      filter((val) => val.length >= 3 || val.length === 0),
-      debounceTime(300)
-    );
-
-    this.currentPage$ = new ReplaySubject<number>(1);
-
-    const query$ = combineLatest([value$, this.currentPage$]).pipe(
-      debounceTime(0),
-      switchMap(([searchValue, currentPage]) => {
-        const skip = getPaginationSkip(currentPage, PAGINATION_LIMIT);
-        return searchRecipes(searchValue, PAGINATION_LIMIT, skip);
-      }),
-      shareReplay({ refCount: true, bufferSize: 1 })
-    );
+    const query$ = this.assembleQuery();
 
     this.searchItems$ = query$.pipe(map((query) => query.data?.recipes));
     this.loading$ = query$.pipe(map((query) => query.loading));
@@ -66,5 +52,28 @@ export class SearchState {
 
   public setCurrentPage(page: number) {
     this.currentPage$.next(page);
+  }
+
+  private assembleQuery() {
+    const initialSearchValue$ = of("");
+    const searchValue$ = merge(
+      this.searchValue$.pipe(debounceTime(300)),
+      initialSearchValue$
+    ).pipe(filter((val) => val.length >= 3 || val.length === 0));
+
+    const initialPage$ = this.currentPage$.pipe(take(1));
+    const otherPage$ = this.currentPage$.pipe(skip(1), debounceTime(300));
+    const page$ = merge(initialPage$, otherPage$);
+
+    const query$ = combineLatest([searchValue$, page$]).pipe(
+      debounceTime(0),
+      switchMap(([searchValue, currentPage]) => {
+        const skip = getPaginationSkip(currentPage, PAGINATION_LIMIT);
+        return searchRecipes(searchValue, PAGINATION_LIMIT, skip);
+      }),
+      shareReplay({ refCount: true, bufferSize: 1 })
+    );
+
+    return query$;
   }
 }
