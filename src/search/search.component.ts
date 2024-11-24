@@ -1,15 +1,15 @@
 import { Observable } from "rxjs";
-import { SearchState } from "./search.state";
+import { RecipesState } from "../recipes.state";
 
 export class SearchComponent {
   constructor(
     private searchView: ISearchView,
-    private searchState: SearchState
+    private recipesState: RecipesState
   ) {
     const searchValue$ = this.searchView.getSearchValue();
 
     searchValue$.subscribe((value) => {
-      this.searchState.setSearchValue(value);
+      this.recipesState.setSearch(value);
     });
   }
 }

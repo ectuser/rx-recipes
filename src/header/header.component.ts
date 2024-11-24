@@ -1,14 +1,14 @@
 import { Observable } from "rxjs";
-import { SearchState } from "../search/search.state";
+import { RecipesState } from "../recipes.state";
 
 export class HeaderComponent {
   private numberOfItems$: Observable<number | undefined>;
 
   constructor(
     private headerView: IHeaderView,
-    private searchState: SearchState
+    private recipesState: RecipesState
   ) {
-    this.numberOfItems$ = this.searchState.numberOfItems$;
+    this.numberOfItems$ = this.recipesState.numberOfRecipes$;
 
     this.numberOfItems$.subscribe((amount) => {
       this.headerView.setNumberOfRecipes(amount);

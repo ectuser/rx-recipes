@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
-import { SearchState } from "../search/search.state";
 import { Recipe } from "../search/types";
+import { RecipesState } from "../recipes.state";
 
 export class ResultsComponent {
   private loading$: Observable<boolean>;
@@ -8,10 +8,10 @@ export class ResultsComponent {
 
   constructor(
     private resultsView: IResultsView,
-    private searchState: SearchState
+    private recipesState: RecipesState
   ) {
-    this.loading$ = this.searchState.loading$;
-    this.searchItems$ = this.searchState.searchItems$;
+    this.loading$ = this.recipesState.loading$;
+    this.searchItems$ = this.recipesState.recipes$;
 
     this.loading$.subscribe((loading) => {
       this.resultsView.setLoading(loading);

@@ -1,15 +1,14 @@
 import { fromEvent, map } from "rxjs";
 import { ISearchView, SearchComponent } from "./search.component";
-import { SearchState } from "./search.state";
+import { RecipesState } from "../recipes.state";
 
 export class SearchView implements ISearchView {
   private input: HTMLInputElement;
 
-  constructor() {
+  constructor(private recipesState: RecipesState) {
     this.input = this.getInputElement();
 
-    const searchState = SearchState.getInstance();
-    new SearchComponent(this, searchState);
+    new SearchComponent(this, this.recipesState);
   }
 
   public getSearchValue() {

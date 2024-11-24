@@ -1,7 +1,6 @@
 import { fromEvent } from "rxjs";
-import { SearchState } from "../search/search.state";
 import { IPaginationView, PaginationComponent } from "./pagination.component";
-import { PaginationState } from "./pagination.state";
+import { RecipesState } from "../recipes.state";
 
 export class PaginationView implements IPaginationView {
   private readonly previousButton: HTMLButtonElement;
@@ -10,18 +9,12 @@ export class PaginationView implements IPaginationView {
 
   private readonly paginationComponent: PaginationComponent;
 
-  constructor() {
+  constructor(private recipesState: RecipesState) {
     this.previousButton = this.getPreviousButton();
     this.nextButton = this.getNextButton();
     this.currentPageEl = this.getCurrentPageEl();
 
-    const searchState = SearchState.getInstance();
-    const paginationState = new PaginationState(searchState);
-    this.paginationComponent = new PaginationComponent(
-      this,
-      searchState,
-      paginationState
-    );
+    this.paginationComponent = new PaginationComponent(this, this.recipesState);
 
     const previousButtonClick$ = fromEvent(this.previousButton, "click");
     const nextButtonClick$ = fromEvent(this.nextButton, "click");

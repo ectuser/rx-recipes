@@ -1,5 +1,5 @@
 import { PAGINATION_LIMIT } from "../pagination/model";
-import { SearchState } from "../search/search.state";
+import { RecipesState } from "../recipes.state";
 import { Recipe } from "../search/types";
 import { IResultsView, ResultsComponent } from "./results.component";
 
@@ -8,11 +8,10 @@ export class ResultsView implements IResultsView {
   private results: Element[] | undefined;
   private container: Element;
 
-  constructor() {
+  constructor(private recipesState: RecipesState) {
     this.container = this.getSearchContainerElement();
 
-    const searchState = SearchState.getInstance();
-    new ResultsComponent(this, searchState);
+    new ResultsComponent(this, this.recipesState);
   }
 
   public setLoading(value: boolean) {

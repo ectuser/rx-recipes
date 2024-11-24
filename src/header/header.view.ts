@@ -1,14 +1,13 @@
-import { SearchState } from "../search/search.state";
+import { RecipesState } from "../recipes.state";
 import { HeaderComponent, IHeaderView } from "./header.component";
 
 export class HeaderView implements IHeaderView {
   private recipesNumberElement: Element;
 
-  constructor() {
+  constructor(private recipesState: RecipesState) {
     this.recipesNumberElement = this.getRecipesNumberElement();
 
-    const searchState = SearchState.getInstance();
-    new HeaderComponent(this, searchState);
+    new HeaderComponent(this, this.recipesState);
   }
 
   public setNumberOfRecipes(amount: number | undefined) {
