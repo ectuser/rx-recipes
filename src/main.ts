@@ -1,18 +1,16 @@
-import { HeaderView } from "./header/header.view";
-import { PaginationView } from "./pagination/pagination.view";
-import { RecipesState } from "./recipes.state";
-import { ResultsView } from "./results/results.view";
-import { SearchView } from "./search/search.view";
+const input = document.querySelector("input") as HTMLInputElement;
 
-class RecipesSearchPage {
-  constructor() {
-    const state = new RecipesState();
+input.addEventListener("input", (e) => {
+  const searchValue = (e.target as HTMLInputElement)!.value;
 
-    new ResultsView(state);
-    new HeaderView(state);
-    new SearchView(state);
-    new PaginationView(state);
-  }
+  console.log(searchValue);
+});
+
+function getRecipes(searchValue: string) {
+  const params = new URLSearchParams();
+  params.append("q", searchValue);
+
+  return fetch(
+    "https://dummyjson.com/recipes/search?" + params.toString()
+  ).then((res) => res.json());
 }
-
-new RecipesSearchPage();
