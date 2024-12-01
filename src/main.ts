@@ -1,25 +1,44 @@
+import {
+  debounceTime,
+  distinctUntilChanged,
+  fromEvent,
+  map,
+  startWith,
+  switchMap,
+} from "rxjs";
 import { ResultsView } from "./results.view";
+import { fromFetch } from "rxjs/fetch";
 
 const input = document.querySelector("input") as HTMLInputElement;
 const resultsView = new ResultsView();
 
-input.addEventListener("input", (e) => {
-  const searchValue = (e.target as HTMLInputElement)!.value;
+const searchValue$ = fromEvent(input, "input").pipe(
+  map((e) => {
+    const searchValue = (e.target as HTMLInputElement)!.value;
 
-  console.log(searchValue);
-});
+    return searchValue;
+  }),
+  startWith("")
+);
 
-getRecipes("").then((response) => {
-  console.log(response.recipes);
+const recipes$ = searchValue$.pipe(
+  debounceTime(300),
+  distinctUntilChanged(),
+  switchMap((searchValue) => {
+    return getRecipes(searchValue);
+  }),
+  map((response) => response.recipes)
+);
 
-  resultsView.setRecipes(response.recipes);
+recipes$.subscribe((recipes) => {
+  resultsView.setRecipes(recipes);
 });
 
 function getRecipes(searchValue: string) {
   const params = new URLSearchParams();
   params.append("q", searchValue);
 
-  return fetch(
+  return fromFetch(
     "https://dummyjson.com/recipes/search?" + params.toString()
-  ).then((res) => res.json());
+  ).pipe(switchMap((res) => res.json()));
 }
